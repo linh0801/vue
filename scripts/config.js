@@ -27,8 +27,10 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
+  // eg： 将 web/entry-runtime-with-compiler.js 路径中的斜杠的前半部分取出来，去alias 中找别名
   const base = p.split('/')[0]
   if (aliases[base]) {
+    // 返回entry-runtime-with-compiler.js绝对路径
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
     return path.resolve(__dirname, '../', p)
@@ -121,6 +123,7 @@ const builds = {
   },
   // Runtime+compiler development build (Browser)
   'web-full-dev': {
+    // resolve 的将路径转换为绝对路径
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.js'),
     format: 'umd',
@@ -262,7 +265,8 @@ function genConfig (name) {
 
   return config
 }
-
+// 判断环境变量是否有TARGET
+// 如果有使用genConfig() 生成rollup配置文件
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {
