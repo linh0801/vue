@@ -15,9 +15,11 @@ export function initExtend (Vue: GlobalAPI) {
 
   /**
    * Class inheritance
+   * 使用基础 Vue 构造器，创建一个“子类”
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
+    // this 是Vue 的构造函数
     const Super = this
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
@@ -29,13 +31,17 @@ export function initExtend (Vue: GlobalAPI) {
     if (process.env.NODE_ENV !== 'production' && name) {
       validateComponentName(name)
     }
-
+    // 声明了一个注册子类的构造器方法 
     const Sub = function VueComponent (options) {
+      // 调用 Vue 构造器 进行初始化
       this._init(options)
     }
+    // 子组件原型上继承Vue的原型
     Sub.prototype = Object.create(Super.prototype)
+    // 把VueComponent 挂载到构造器上
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
+    // 将 扩展的子类选项和Vue 的选项合并一起 作为之类的选项
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
