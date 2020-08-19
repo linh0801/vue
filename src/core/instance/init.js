@@ -77,7 +77,7 @@ export function initMixin (Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 将el挂载到Vue 实例上，完成渲染
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

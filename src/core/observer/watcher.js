@@ -127,10 +127,13 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
+    // 当前的Dep是否已经存在了,已经存在了则无需重复
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
+      // 此处的 this.depIds 是什么时候由空数组被赋值的
       if (!this.depIds.has(id)) {
+        // 当前的Dep添加添加订阅者Watcher
         dep.addSub(this)
       }
     }

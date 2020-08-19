@@ -66,6 +66,8 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
+      // 首次渲染调用__patch__ 进行diff 比较，用vnode 中的更新vm.$el的
+      // 最终返回的是真实的dom,完成页面的渲染
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
@@ -187,6 +189,8 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
+      // vm._render() 生成Vnode
+      // 
       vm._update(vm._render(), hydrating)
     }
   }

@@ -48,13 +48,17 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  // 遍历props ,对每一个属性进行验证，进行响应式处理并挂载到Vue实例上
   if (opts.props) initProps(vm, opts.props)
+  // 遍历methods,将每一个方法都挂载到Vue实例上
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
+    // 对data 中的属性进行 getter/setter 数据劫持，并将每一属性挂载到Vue实例上
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 遍历computed 属性，将其进行响应式处理，并挂载到Vue 实例上 
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
@@ -62,6 +66,7 @@ export function initState (vm: Component) {
 }
 
 function initProps (vm: Component, propsOptions: Object) {
+  // 获取父组件传递的所有的
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
   // cache prop keys so that future props updates can iterate using Array
@@ -72,8 +77,10 @@ function initProps (vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+  // 遍历 props 
   for (const key in propsOptions) {
     keys.push(key)
+    // 验证属性的类型，以及获取属性对应的值
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
@@ -97,12 +104,14 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 对props 属性进行响应式处理
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
     if (!(key in vm)) {
+      // 代理到Vue 实例上
       proxy(vm, `_props`, key)
     }
   }
@@ -111,6 +120,8 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 初始化 _data，组件中 data 是函数，调用函数返回结果
+  // 否则直接返回 data
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -123,10 +134,13 @@ function initData (vm: Component) {
     )
   }
   // proxy data on instance
+  // 获取 data 中的所有属性
   const keys = Object.keys(data)
+  // 获取 props / methods
   const props = vm.$options.props
   const methods = vm.$options.methods
   let i = keys.length
+  // 判断 data 上的成员是否和  props/methods 重名
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
@@ -144,10 +158,12 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // 代理到Vue 实例上，方便我们使用this.dataName 访问相关的属性数据
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 响应式处理
   observe(data, true /* asRootData */)
 }
 
@@ -168,12 +184,14 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
+  // 创建一个没有原型的观察者对象
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
   for (const key in computed) {
     const userDef = computed[key]
+    // 计算属性要么是function 要么是个对象且对象下有get 方法
     const getter = typeof userDef === 'function' ? userDef : userDef.get
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
@@ -263,6 +281,7 @@ function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
+      // 验证当前是否是function
       if (typeof methods[key] !== 'function') {
         warn(
           `Method "${key}" has type "${typeof methods[key]}" in the component definition. ` +
@@ -270,12 +289,14 @@ function initMethods (vm: Component, methods: Object) {
           vm
         )
       }
+      // 验证 方法名称是否和props 里的重名了
       if (props && hasOwn(props, key)) {
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+      // 验证 方法名 已经存在于Vue 实例上 并且使用了保留的关键字
       if ((key in vm) && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
@@ -283,6 +304,8 @@ function initMethods (vm: Component, methods: Object) {
         )
       }
     }
+    // 将 方法挂载到Vue 实例上，并且将方法中的上下文指向Vue实例
+    // 这样处理之后我们才可以使用 this.fn() 进行方法调用
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }
@@ -347,20 +370,27 @@ export function stateMixin (Vue: Class<Component>) {
     cb: any,
     options?: Object
   ): Function {
+    // 获取 Vue 实例 this
     const vm: Component = this
     if (isPlainObject(cb)) {
+      // 判断如果 cb 是对象执行 createWatcher
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // 标记为用户 watcher
     options.user = true
+    // 创建用户 watcher 对象
     const watcher = new Watcher(vm, expOrFn, cb, options)
+    // 判断 immediate 如果为 true
     if (options.immediate) {
+      // 立即执行一次 cb 回调，并且把当前值传入
       try {
         cb.call(vm, watcher.value)
       } catch (error) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回取消监听的方法
     return function unwatchFn () {
       watcher.teardown()
     }
