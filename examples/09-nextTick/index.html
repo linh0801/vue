@@ -20,14 +20,21 @@
         name: 'Vue.js',
         title: 'Title'
       },
+      // 主线线程的同步代码遇到mounted 执行这个钩子函数
       mounted() {
         this.msg = 'Hello World'
         this.name = 'Hello snabbdom'
         this.title = 'Vue.js'
-  
+        // 当值改变后，Dep通知watcher进行视图的更新
+        // 视图更新会先调用queueWatcher 内部执行nextTick(flushSchedulerQueue)
+        // 将 flushSchedulerQueue 压入 callbacks 数组中
+        // 执行此处的nextTick
+        // 将此处的匿名函数压入callback
         Vue.nextTick(() => {
           console.log(this.$refs.p1.textContent)
         })
+        // 同步代码完成首次渲染之后，开始调用promise 的then(flushCallbacks)
+        // 此时遍历callbacks，首先进行 视图的更新，再进行匿名函数的调用就可以获取到更新后的dom 
       }
     })
 

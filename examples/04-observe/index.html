@@ -14,6 +14,11 @@
     <hr>
 
     {{ count }}
+    <hr>
+    姓： {{firstName}} <br>
+    名： {{lastName}} <br>
+    全名:
+    {{fullName}}
   </div>
 
   <script src="../../dist/vue.js"></script>
@@ -22,7 +27,14 @@
       el: '#app',
       data: {
         msg: 'Hello Vue',
-        count: 100
+        count: 100,
+        firstName: 'Lin',
+        lastName: 'Huan'
+      },
+      computed: {
+        fullName () {
+          return this.firstName + "/" + this.lastName
+        }
       }
     })
   </script>

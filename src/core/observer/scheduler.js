@@ -88,10 +88,12 @@ function flushSchedulerQueue () {
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
+      // 渲染watcher，触发beforeUpdate的钩子函数
       watcher.before()
     }
     id = watcher.id
     has[id] = null
+    // 执行run
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -166,6 +168,7 @@ export function queueWatcher (watcher: Watcher) {
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
+      // 当前队列是空闲状态，压入传入的watcher 
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
@@ -177,6 +180,7 @@ export function queueWatcher (watcher: Watcher) {
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
+    // 判断当前队列是不是等待的状态
     if (!waiting) {
       waiting = true
 

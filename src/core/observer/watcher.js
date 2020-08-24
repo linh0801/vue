@@ -99,6 +99,7 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 全局唯一的Watcher 入栈
     pushTarget(this)
     let value
     const vm = this.vm
@@ -133,7 +134,7 @@ export default class Watcher {
       this.newDeps.push(dep)
       // 此处的 this.depIds 是什么时候由空数组被赋值的
       if (!this.depIds.has(id)) {
-        // 当前的Dep添加添加订阅者Watcher
+        // 当前的Dep的subs中添加添加订阅者Watcher
         dep.addSub(this)
       }
     }
@@ -171,6 +172,7 @@ export default class Watcher {
     } else if (this.sync) {
       this.run()
     } else {
+      // 对要更新的Watcher 压入队列
       queueWatcher(this)
     }
   }
@@ -180,8 +182,12 @@ export default class Watcher {
    * Will be called by the scheduler.
    */
   run () {
+    // Watcher 是激活状态
     if (this.active) {
+      // 获取新值
       const value = this.get()
+
+      // this.value 是旧的值
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -191,10 +197,12 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
+        // 为watcher设置新值
         const oldValue = this.value
         this.value = value
         if (this.user) {
           try {
+          // 用户watcher则触发用户侦听器的回调函数
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)

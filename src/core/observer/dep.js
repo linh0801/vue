@@ -44,7 +44,9 @@ export default class Dep {
       // order
       subs.sort((a, b) => a.id - b.id)
     }
+    // 遍历dep的订阅者集合
     for (let i = 0, l = subs.length; i < l; i++) {
+      // 调用Watcher对象的update
       subs[i].update()
     }
   }

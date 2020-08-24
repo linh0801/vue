@@ -235,28 +235,40 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 设置的目标对象是数组，且key 是有效的索引
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 原有数组的长度和传入的key 比较取两者最大的一个作为修改后数组的长度
     target.length = Math.max(target.length, key)
+    // 此处有两种情况
+    // 当 key < 原有数组的长度， 此处是替换原有对应位置的数据
+    // 当 key >= 原有数组的长度, 此处是往数组中新增
     target.splice(key, 1, val)
     return val
   }
+  // key 已经在目标对象中存在，且 key 不存在于Object的原型上
   if (key in target && !(key in Object.prototype)) {
+    // 修改原有对象的属性值
     target[key] = val
     return val
   }
+  // 获取Observe 对象
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
+    // 不能对Vue 实例 或者 $data Set 操作
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
     )
     return val
   }
+  // 不是一个响应式对象
   if (!ob) {
     target[key] = val
     return val
   }
+  // 为新增的属性定义响应式
   defineReactive(ob.value, key, val)
+  // 通知视图更新
   ob.dep.notify()
   return val
 }

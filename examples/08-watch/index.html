@@ -4,12 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>watcher</title>
+  <style>
+     .block {
+       color: red
+     }
+  </style>
 </head>
 <body>
   <div id="app">
-    {{ reversedMessage }}
+    <h1 class = "block">{{ reversedMessage }}</h1>
     <hr>
-    {{ user.fullName }}
+    <h5>{{ user.fullName }}</h5>
   </div>
 
   <script src="../../dist/vue.js"></script>

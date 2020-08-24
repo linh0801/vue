@@ -184,7 +184,7 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
-  // 创建一个没有原型的观察者对象
+  // 创建一个没有原型的计算属性的观察者对象
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
@@ -202,6 +202,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // 创建计算属性Watcher
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -214,6 +215,8 @@ function initComputed (vm: Component, computed: Object) {
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
     if (!(key in vm)) {
+      // 对计算属性进行getter/setter 数据拦截
+      // 将计算属性挂载到Vue 实例上
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
       if (key in vm.$data) {
@@ -231,7 +234,9 @@ export function defineComputed (
   userDef: Object | Function
 ) {
   const shouldCache = !isServerRendering()
+  // 计算属性是function
   if (typeof userDef === 'function') {
+    // 定义计算属性的属性描述符的get
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
@@ -255,12 +260,15 @@ export function defineComputed (
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
-
+// 返回一个函数，当计算属性被访问时触发
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // dirty 用来控制是否需要去重新读取属性
       if (watcher.dirty) {
+        // 当前是计算属性Watcher
+        // 获取计算属性的Value，并dirty修改为false
         watcher.evaluate()
       }
       if (Dep.target) {
@@ -314,10 +322,12 @@ function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
     if (Array.isArray(handler)) {
+      // 判断当前监听的属性是数组，则遍历数组创建用户Watcher
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
       }
     } else {
+      // 创建用户Watcher
       createWatcher(vm, key, handler)
     }
   }
@@ -325,15 +335,19 @@ function initWatch (vm: Component, watch: Object) {
 
 function createWatcher (
   vm: Component,
-  expOrFn: string | Function,
+  expOrFn: string | Function, 
   handler: any,
   options?: Object
 ) {
   if (isPlainObject(handler)) {
+    // 判断当前的handler是原始对象
     options = handler
+    // 获取handler对象的处理函数
     handler = handler.handler
   }
   if (typeof handler === 'string') {
+    // 判断当前的handler 是字符串， 则在Vue实例上获取回调函数fn
+    // fn 的定义在methods里
     handler = vm[handler]
   }
   return vm.$watch(expOrFn, handler, options)
